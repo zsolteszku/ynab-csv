@@ -1,6 +1,9 @@
 # These are the columns that YNAB expects
 ynab_cols = ['Date','Payee','Category','Memo','Outflow','Inflow']
 
+String.prototype.fulltrim= -> 
+  this.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ')
+
 # Converts a string value into a number.
 # Filters out all special characters like $ or ,
 numberfy = (val) ->
@@ -78,6 +81,22 @@ class window.DataObject
     @.converted_json(limit, lookup).forEach (row) ->
       row_values = []
       ynab_cols.forEach (col) ->
-        row_values.push row[col]
+        row_value = row[col]
+        parantetize = false
+        if (row_value?)
+          #trim values
+          if typeof row_value == "string"
+            row_value = row_value.fulltrim()
+            # replace double qoutes to 
+            if row_value.indexOf("\"") != -1
+              parantetize = true
+              row_value = row_value.replace(/\"+/g, "\"\"")
+            # if contains comma than we have to parantetize
+            if row_value.indexOf(",") != -1
+              parantetize = true
+        # should parantetize
+        if parantetize
+          row_value = "\"" + row_value + "\""
+        row_values.push row_value
       string += row_values.join(',') + "\n"
     string
